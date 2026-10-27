@@ -1,12 +1,13 @@
-FROM python:3.11-slim
+FROM node:20-alpine
 
 WORKDIR /app
 
-COPY server/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY server/pan-search.js ./server/
+COPY config.json ./
 
-COPY server/ .
+ENV PORT=8889 \
+    NODE_ENV=production
 
-EXPOSE 8888
+EXPOSE 8889
 
-CMD ["python", "pan_search_server.py"]
+CMD ["node", "server/pan-search.js"]

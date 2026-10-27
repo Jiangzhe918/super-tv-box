@@ -1,0 +1,44 @@
+services:
+  # 网盘搜索聚合层：对 Fongmi 输出标准 CMS 协议（免 jar 的关键）
+  pan-search:
+    build: .
+    image: super-tv-box/pan-search
+    container_name: super-tv-box-pan-search
+    restart: unless-stopped
+    ports:
+      - "8889:8889"
+    environment:
+      PORT: 8889
+      # 指向下面的自建 pansou；不填则借用公共演示实例
+      PANSOU_URL: http://pansou:80
+      # PANSOU_TOKEN: ""        # pansou 开启鉴权时填写
+      # PANHUB_URL: http://panhub:3000   # 自建 panhub 后打开
+      SEARCH_TIMEOUT: 25000
+      CACHE_TTL: 300
+    depends_on:
+      - pansou
+
+  # pansou：TG 频道 + 插件的网盘链接聚合搜索引擎
+  pansou:
+    image: ghcr.io/fish2018/pansou-web
+    container_name: pansou
+    restart: unless-stopped
+    ports:
+      - "8888:80"
+    environment:
+      # 可选：自定义要抓的 TG 频道与并发
+      # CHANNELS: "tgsearchers3,yunpanxunlei,Quark_Movies"
+      CONCURRENCY: 20
+      TELEGRAM_API_ID: ""
+      TELEGRAM_API_HASH: ""
+
+  # panhub 为可选增强项：它是 Nuxt/Nitro 应用，需要自行构建镜像。
+  # 源码：https://github.com/wu529778790/panhub.shenzjd.com
+  # 构建好后去掉下面的注释，并把上面 PANHUB_URL 打开。
+  # panhub:
+  #   build:
+  #     context: ./panhub
+  #   container_name: panhub
+  #   restart: unless-stopped
+  #   ports:
+  #     - "3000:3000"

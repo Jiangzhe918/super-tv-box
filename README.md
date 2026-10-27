@@ -1,203 +1,159 @@
-# 超级影视聚合接口
+# 超级影视 · Fongmi 单仓接口（免 jar）
 
-> 集成网盘搜索(PanSou + PanHub) + 多家优质在线影视源 + 视频解析能力
+一个 **单仓** JSON 接口配置 + 一个 **自建网盘搜索服务**。全部站点使用 `type: 1` 标准 CMS 采集协议，
+因此 **不需要任何 jar 爬虫包**（配置里没有 `spider` 字段也能正常搜索与播放）。
 
-## 项目简介
-
-本项目是一个为 Fongmi/TVBox 影视软件设计的聚合接口配置，整合了以下能力：
-
-- **网盘资源搜索**：集成 PanSou 和 PanHub，支持阿里云盘、夸克网盘、百度网盘、天翼网盘等多种网盘资源搜索
-- **在线影视聚合**：整合饭太硬、肥猫、王二小、老刘备、小马等优质源的在线影视接口
-- **视频解析**：内置多个视频解析接口，自动选择最佳解析线路
-- **直播源**：内置央视、卫视等直播频道
+```
+在线影视：7 家采集源，实测 vod_play_from 里带 xxxm3u8 直连线路，
+          返回真实 #EXTM3U，无需第三方解析即可播放。
+网盘搜索：server/pan-search.js 把 pansou + panhub 的结果转换成 CMS 协议，
+          Fongmi 用内置网盘播放器打开（ali / quark / baidu / 115 / uc / 迅雷 / 天翼 / 移动 / PikPak / 123 / 磁力）。
+```
 
 ## 接口地址
 
-### 主接口（推荐）
-```
-https://raw.githubusercontent.com/Jiangzhe918/super-tv-box/main/config.json
-```
-
-### 多仓聚合接口
-```
-https://raw.githubusercontent.com/Jiangzhe918/super-tv-box/main/multi.json
-```
-
-### CDN加速地址（国内访问更快）
 ```
 https://fastly.jsdelivr.net/gh/Jiangzhe918/super-tv-box@main/config.json
-https://cdn.jsdelivr.net/gh/Jiangzhe918/super-tv-box@main/multi.json
 ```
 
-## 使用方法
+> `raw.githubusercontent.com` 在部分网络环境不可达，故推荐 jsdelivr 镜像；
+> 网络通畅时也可用 `https://raw.githubusercontent.com/Jiangzhe918/super-tv-box/main/config.json`。
 
-### 1. Fongmi / OK影视
-1. 打开 Fongmi/OK影视 应用
-2. 进入 **设置** → **配置接口**
-3. 输入上述接口地址
-4. 确认加载即可
+粘贴到 Fongmi → 设置 → 配置地址 即可。**在线影视部分开箱即用**；
+网盘搜索需要先跑起本仓库的服务（见下一节），未启动时该站点只是没有结果，不影响其它源。
 
-### 2. TVBox
-1. 打开 TVBox 应用
-2. 进入 **设置** → **配置接口**
-3. 粘贴接口地址
-4. 点击确定
+## 开启网盘搜索
 
-### 3. 影视仓
-1. 打开影视仓
-2. 设置 → 接口配置
-3. 输入接口地址
+服务默认借用 pansou 公共演示实例与 panhub 公共精选库，**零配置也能出结果**，
+但自建 pansou 后速度和链路完整性明显更好。
+
+### 方式一：Docker（推荐）
+
+```bash
+git clone https://github.com/Jiangzhe918/super-tv-box.git
+cd super-tv-box
+docker compose up -d
+```
+
+启动后包含两个容器：`pansou`（8888）与 `pan-search`（8889）。
+
+### 方式二：直接运行（需要 Node 18+）
+
+```bash
+node server/pan-search.js
+```
+
+### 让 Fongmi 拿到正确的地址
+
+服务自带一个会**自动改写网盘站点地址**的配置入口。假设你的电脑内网 IP 是 `192.168.1.20`：
+
+```
+http://192.168.1.20:8889/config.json
+```
+
+用这个地址替换掉上面的 GitHub 地址，网盘搜索源会自动指向 `192.168.1.20:8889`，不用手改 `config.json`。
+（只想改本地文件的话，把 `config.json` 里 `PanSearch` 的 `api` 中的 `127.0.0.1` 换成内网 IP 也一样。）
+
+电视和电脑必须在同一局域网；Fongmi 还需在「设置 → 点播」里填对应网盘的 Cookie 才能直连播放。
+
+### 环境变量
+
+| 变量 | 默认 | 说明 |
+|------|------|------|
+| `PORT` | `8080` | 监听端口；`Dockerfile`/compose 里用 `8889` |
+| `PANSOU_URL` | 空 | 自建 pansou 地址，如 `http://127.0.0.1:8888` |
+| `PANSOU_TOKEN` | 空 | pansou 开启鉴权时的 token，只走环境变量，别提交进仓库 |
+| `USE_PUBLIC_PANSOU` | `1` | 未配置自建时借用公共演示实例 |
+| `PANHUB_URL` | 空 | 自建 panhub（Nitro）地址 |
+| `USE_PUBLIC_PANHUB` | `1` | 使用 panhub 公共精选库 |
+| `SEARCH_TIMEOUT` | `25000` | 单个上游超时（毫秒） |
+| `CACHE_TTL` | `300` | 搜索结果缓存秒数 |
+
+## 接口自检
+
+```bash
+curl "http://127.0.0.1:8889/health"
+curl "http://127.0.0.1:8889/api.php/provide/vod/?ac=list"
+curl "http://127.0.0.1:8889/api.php/provide/vod/?ac=videolist&wd=流浪地球"
+```
+
+实测输出（2026-10-27）：`流浪地球` 返回 40 张卡片、`quark/ali/baidu/115/thunder/uc/123/天翼/移动/磁力` 线路齐全，
+`vod_play_from` 与 `vod_play_url` 的 `$$$` 段数一一对应，约 5 秒返回。
+
+分类可用作筛选：`?ac=videolist&t=quark` 只返回夸克链路。
 
 ## 项目结构
 
 ```
-├── config.json              # 主配置文件（单仓）
-├── multi.json               # 多仓聚合配置
-├── spiders/                 # 爬虫脚本目录
-│   ├── pan_search.js        # 网盘搜索爬虫（PanSou + PanHub）
-│   ├── ali_pan.js           # 阿里云盘专用爬虫
-│   ├── quark_pan.js         # 夸克网盘专用爬虫
-│   ├── online_video.js      # 在线影视聚合爬虫
-│   └── parser.js            # 视频解析聚合模块
-├── server/                  # 后端服务（可选部署）
-│   ├── pan_search_server.py # 网盘搜索API服务
-│   └── requirements.txt     # Python依赖
-├── Dockerfile               # Docker部署文件
-└── README.md                # 项目说明
+├── config.json            # 单仓接口配置（type:1，无 spider 字段）
+├── server/pan-search.js   # pansou + panhub -> CMS 协议聚合服务（零依赖）
+├── Dockerfile             # pan-search 服务镜像
+├── docker-compose.yml     # pansou + pan-search 一键部署
+└── README.md
 ```
 
-## 功能详情
+## 站点清单与验证状态
 
-### 网盘搜索
-| 网盘类型 | 支持搜索 | 支持播放 |
-|---------|---------|---------|
-| 阿里云盘 | ✅ | ✅ |
-| 夸克网盘 | ✅ | ✅ |
-| 百度网盘 | ✅ | ✅ |
-| 天翼网盘 | ✅ | ✅ |
-| 115网盘 | ✅ | ✅ |
-| 迅雷网盘 | ✅ | ✅ |
-| UC网盘 | ✅ | ✅ |
-| PikPak | ✅ | ✅ |
+| 站点 | key | 接口 | 2026-10-27 实测 |
+|------|-----|------|------------------|
+| 🔍 网盘聚合搜索 | `PanSearch` | 自建 `:8889` | 40 条结果，10 类网盘，含海报 |
+| 🎬 量子资源 | `LZCJ` | `cj.lziapi.com` | `ac=list` 200／40 分类；`lzm3u8` 直连 `#EXTM3U` ✅ |
+| 🎬 非凡资源 | `FFCJ` | `cj.ffzyapi.com` | 31 分类；`ffm3u8` 直连 ✅ |
+| 🎬 光速资源 | `GSCJ` | `api.guangsuapi.com` | 44 分类；`gsm3u8` 直连 ✅ |
+| 🎬 金鹰资源 | `JYCJ` | `jyzyapi.com` | 44 分类；`jinyingm3u8` 直连 ✅ |
+| 🎬 极速资源 | `JSCJ` | `jszyapi.com` | 48 分类；`jsm3u8` 直连 ✅ |
+| 🎬 百度资源 | `BDCJ` | `api.apibdzy.com` | 54 分类；`dbm3u8` 本次请求超时，需重试 |
+| 🎬 最大资源 | `ZDCJ` | `www.zuidazy.com` | 59 分类；`zuidam3u8` 本次搜索抖动 |
 
-### 在线影视源
-| 源名称 | 类型 | 状态 |
-|--------|------|------|
-| 饭太硬 | 在线 | ✅ |
-| 肥猫 | 在线 | ✅ |
-| 王二小 | 在线 | ✅ |
-| 老刘备 | 在线 | ✅ |
-| 小马(小米) | 在线 | ✅ |
-| 高清影视(iiov) | 在线 | ✅ |
-| 红牛资源 | 在线 | ✅ |
-| 光速资源 | 在线 | ✅ |
-| OK资源 | 在线 | ✅ |
-| 极速资源 | 在线 | ✅ |
-| 量子资源 | 在线 | ✅ |
-| 非凡资源 | 在线 | ✅ |
+采集站点由社区运营，可用性会漂移；配置里保留 7 家互为冗余。
 
-### 视频解析接口
-| 解析名称 | 支持平台 |
-|---------|---------|
-| 虾米解析 | QQ/爱奇艺/优酷/芒果/搜狐/乐视/B站 |
-| 夜幕解析 | QQ/爱奇艺/优酷/芒果 |
-| BL解析 | QQ/爱奇艺/优酷/芒果/搜狐 |
-| 魔汤解析 | QQ/爱奇艺/优酷 |
-| 极速解析 | QQ/爱奇艺/优酷/芒果/搜狐 |
-| OK解析 | QQ/爱奇艺/优酷/芒果 |
-| 爱豆解析 | QQ/爱奇艺/优酷 |
+## 关于视频解析（`parses` 为什么是空的）
 
-## 自建后端搜索服务（可选）
+`config.json` 的 `parses` 故意留空，原因有两个：
 
-如果你想部署自己的网盘搜索后端服务：
+1. **不需要**——上面 5 家源的 `xxxm3u8` 线路直接吐 `#EXTM3U`，套第三方解析反而更容易失败。
+2. **验不过就不写**——常见社区解析是 `http://<裸IP>:7777/api/?key=xxxx&url=`。这类地址在本环境无法连通，
+   而且 `key` 是别人发布的访问凭据，抄进公开仓库并不合适。
 
-### 方式一：直接运行
-```bash
-cd server
-pip install -r requirements.txt
-python pan_search_server.py
+需要额外解析时，把自己的地址按下面格式填进 `parses` 即可（社区维护的完整解析列表请从你自己的可信源获取）：
+
+```json
+{ "name": "我的解析", "type": 1, "url": "https://你的解析地址/api/?key=你的key&url=", "ext": { "flag": ["liangzi", "feifan", "gsyun"] } }
 ```
 
-### 方式二：Docker部署
-```bash
-docker build -t pan-search-api .
-docker run -d -p 8888:8888 --name pan-search pan-search-api
-```
+不写解析时，Fongmi 仍会走 `rules` 里的嗅探规则（本项目沿用了社区成熟配置的 9 条嗅探/点击规则、5 条 DoH 与广告过滤，均已随配置一起提供）。
 
-### API接口
-- `GET /api/search?wd=关键词&page=1&type=ali` - 搜索网盘资源
-- `GET /api/hot?limit=20` - 获取热门资源
-- `GET /api/detail?id=资源ID` - 获取资源详情
-- `GET /api/sources` - 获取支持的搜索源
-- `GET /api.php/provide/vod/?wd=关键词` - TVBox兼容接口
+## 自定义
 
-## 配置说明
-
-### 配置文件格式
-本项目遵循 Fongmi/TVBox 的 JSON 配置规范：
+新增在线源：
 
 ```json
 {
-  "key": "接口唯一标识",
-  "name": "接口显示名称",
-  "spider": "爬虫JAR包地址",
-  "sites": [],     // 站点列表
-  "parses": [],    // 解析接口列表
-  "lives": [],     // 直播源列表
-  "flags": [],     // 播放器标志
-  "ads": []        // 广告过滤规则
-}
-```
-
-### 站点类型说明
-| Type | 说明 |
-|------|------|
-| 0 | JSON API采集源（CMS站） |
-| 1 | XML/采集接口源 |
-| 3 | Spider爬虫源（JS/Java/Python） |
-| 4 | 直链源 |
-
-## 自定义配置
-
-### 添加新的在线源
-在 `config.json` 的 `sites` 数组中添加：
-```json
-{
-  "key": "新源唯一key",
+  "key": "新源key",
   "name": "🎬 新源名称",
   "type": 1,
-  "api": "https://新源地址/api.php/provide/vod/",
+  "api": "https://xxx/api.php/provide/vod/",
   "searchable": 1,
   "quickSearch": 1,
-  "filterable": 1,
-  "changeable": 1
+  "filterable": 0,
+  "changeable": 0
 }
 ```
 
-### 添加新的解析接口
-在 `config.json` 的 `parses` 数组中添加：
-```json
-{
-  "name": "新解析名称",
-  "type": 0,
-  "url": "https://新解析地址/?url="
-}
-```
+`type` 语义：`0` = XML 采集，`1` = JSON 采集，`3` = 爬虫（需要 jar，本配置刻意不用）。
 
-## 注意事项
+## 注意
 
-1. 所有第三方接口由社区维护，不保证长期可用
-2. 建议配置多仓接口，主接口失效时可自动切换
-3. 网盘资源需要对应的网盘账号才能播放
-4. 本项目仅供学习交流使用
+- 本仓库是**公开**仓库：网盘 Cookie、pansou token 等一律放环境变量或 Fongmi 设置，不要提交。
+- 仅供学习交流，请勿用于任何商业用途。
 
 ## 致谢
 
-- [FongMi/TV](https://github.com/FongMi/TV) - FongMi影视开源项目
-- [PanSou](https://github.com/fish2018/pansou) - 网盘搜索引擎
-- [PanHub](https://github.com/wu529778790/panhub.shenzjd.com) - 网盘聚合搜索
-- 饭太硬、肥猫、王二小、老刘备、小马等源的制作者们
+- [FongMi/TV](https://github.com/FongMi/TV)
+- [PanSou](https://github.com/fish2018/pansou) — 网盘链接聚合引擎
+- [PanHub](https://github.com/wu529778790/panhub.shenzjd.com) — 网盘资源精选与聚合
+- 肥猫、饭太硬、王二小、老刘备、小马等社区源的制作者（本配置的 `rules`/`doh`/`ads` 借鉴自其公开配置结构）
 
 ## License
 
-MIT License
+MIT
