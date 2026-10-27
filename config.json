@@ -12,7 +12,7 @@
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 0,
-      "ext": "./spiders/pan_search.js"
+      "ext": "https://fastly.jsdelivr.net/gh/Jiangzhe918/super-tv-box@main/spiders/pan_search.js"
     },
     {
       "key": "阿里云盘",
@@ -22,7 +22,7 @@
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 0,
-      "ext": "./spiders/ali_pan.js"
+      "ext": "https://fastly.jsdelivr.net/gh/Jiangzhe918/super-tv-box@main/spiders/ali_pan.js"
     },
     {
       "key": "夸克网盘",
@@ -32,7 +32,7 @@
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 0,
-      "ext": "./spiders/quark_pan.js"
+      "ext": "https://fastly.jsdelivr.net/gh/Jiangzhe918/super-tv-box@main/spiders/quark_pan.js"
     },
     {
       "key": "在线影视聚合",
@@ -43,7 +43,7 @@
       "quickSearch": 1,
       "filterable": 1,
       "changeable": 1,
-      "ext": "./spiders/online_video.js"
+      "ext": "https://fastly.jsdelivr.net/gh/Jiangzhe918/super-tv-box@main/spiders/online_video.js"
     },
     {
       "key": "高清影视",

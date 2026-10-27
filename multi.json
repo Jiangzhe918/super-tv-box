@@ -2,7 +2,7 @@
   "urls": [
     {
       "name": "🎬 超级影视聚合",
-      "url": "./config.json"
+      "url": "https://fastly.jsdelivr.net/gh/Jiangzhe918/super-tv-box@main/config.json"
     },
     {
       "name": "🍚 饭太硬线路",
