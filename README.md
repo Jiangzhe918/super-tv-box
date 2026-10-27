@@ -13,11 +13,18 @@
 ## 接口地址
 
 ```
-https://fastly.jsdelivr.net/gh/Jiangzhe918/super-tv-box@main/config.json
+https://gcore.jsdelivr.net/gh/Jiangzhe918/super-tv-box@main/config.json
 ```
 
-> `raw.githubusercontent.com` 在部分网络环境不可达，故推荐 jsdelivr 镜像；
-> 网络通畅时也可用 `https://raw.githubusercontent.com/Jiangzhe918/super-tv-box/main/config.json`。
+备用（同一份文件的不同 CDN 节点）：
+
+```
+https://fastly.jsdelivr.net/gh/Jiangzhe918/super-tv-box@main/config.json
+https://raw.githubusercontent.com/Jiangzhe918/super-tv-box/main/config.json
+```
+
+> jsdelivr 有缓存，`raw.githubusercontent.com` 在国内多数网络不可达，因此把 gcore 节点作为首选。
+> 刚推送新版本后若仍读到旧内容，可用 `https://purge.jsdelivr.net/gh/Jiangzhe918/super-tv-box@main/config.json` 主动刷新。
 
 粘贴到 Fongmi → 设置 → 配置地址 即可。**在线影视部分开箱即用**；
 网盘搜索需要先跑起本仓库的服务（见下一节），未启动时该站点只是没有结果，不影响其它源。
