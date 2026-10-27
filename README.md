@@ -13,22 +13,20 @@
 
 ## 接口地址
 
-部署到 GitHub 后，使用以下地址：
-
 ### 主接口（推荐）
 ```
-https://raw.githubusercontent.com/你的用户名/你的仓库名/main/config.json
+https://raw.githubusercontent.com/Jiangzhe918/super-tv-box/main/config.json
 ```
 
 ### 多仓聚合接口
 ```
-https://raw.githubusercontent.com/你的用户名/你的仓库名/main/multi.json
+https://raw.githubusercontent.com/Jiangzhe918/super-tv-box/main/multi.json
 ```
 
-### CDN加速地址
+### CDN加速地址（国内访问更快）
 ```
-https://fastly.jsdelivr.net/gh/你的用户名/你的仓库名@main/config.json
-https://cdn.jsdelivr.net/gh/你的用户名/你的仓库名@main/config.json
+https://fastly.jsdelivr.net/gh/Jiangzhe918/super-tv-box@main/config.json
+https://cdn.jsdelivr.net/gh/Jiangzhe918/super-tv-box@main/multi.json
 ```
 
 ## 使用方法
